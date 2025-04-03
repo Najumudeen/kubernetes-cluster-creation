@@ -1,0 +1,46 @@
+# config.vm.network :forwarded_port, guest: 22, host: 2222
+#  node.vm.provision "shell", path: "bootstrap_kworker.sh"
+# node.vm.provision "shell", path: "bootstrap_kmaster.sh"
+# config.vm.provision "shell", path: "bootstrap.sh"
+VAGRANT_BOX         = "generic/ubuntu2204"
+NodeCount           = 1
+NETWORK_PREFIX      = "172.16.16"
+
+#kmaster.vm.network "private_network", type: "dhcp"
+#kmaster.vm.network :forwarded_port, guest: 80, host: 4567
+
+Vagrant.configure(2) do |config|
+  config.ssh.insert_key = false
+  config.vm.box = VAGRANT_BOX
+
+# Kubernetes Master Server
+  config.vm.define "kmaster" do |node|
+
+    node.vm.hostname = "kmaster.example.com"
+    node.vm.network "private_network", ip: "#{NETWORK_PREFIX}.100"
+
+    node.vm.provider "virualbox" do |v|
+      v.name = "kmaster"
+      v.memory = 2048
+      v.cpus = 1
+    end
+  end
+
+#Kubernetews Worker Nodes
+(1..NodeCount).each do |i|
+
+  config.vm.define "kworker#{i}" do |node|
+
+    node.vm.hostname = "kworker#{i}.example.com"
+    node.vm.network "private_network", ip: "#{NETWORK_PREFIX}.10#{i}"
+
+    node.vm.provider "virtualbox" do |v|
+      v.name = "kworker#{i}"
+      v.memory = 1024
+      v.cpus = 1
+    end
+  end
+
+end
+
+end
